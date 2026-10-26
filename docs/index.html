@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+  .card{background:#E1EEFC;border-color:#B9D2F0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card{background:var(--surface);border-color:var(--line)}}
+:root[data-theme="dark"] .card{background:var(--surface);border-color:var(--line)}
 <style>
 :root{--bg:#EDF0F7;--surface:#fff;--ink:#0B1B3A;--mute:#55637F;--line:#CDD5E4;--pitch:#0B1F4B;--gold:#D62839;--bar:#D62839;--off:#DCE2EE;--warn:#FDE8EA;--warnink:#7A1420;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -87,9 +90,9 @@ h2 span{font-weight:400;font-size:15px;color:var(--mute)}
 .photo{position:relative}.photo img{object-fit:cover;padding:0}
 .b.cur{outline:2px solid #D62839;outline-offset:2px;border-radius:6px}
 .bl{display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:4px}
-.bl .bd{width:18px;height:18px;font-size:7px}
-.strip{height:176px}
-.fx .me{font-weight:700;background:var(--off);border-radius:999px;padding:3px 10px 3px 3px;box-shadow:inset 0 0 0 2px var(--pitch)}
+.bl .bd{width:26px;height:26px;font-size:9px}
+.strip{height:200px}
+.fx .me{font-weight:700;background:var(--off);border-radius:999px;padding:5px 12px 5px 8px;box-shadow:inset 0 0 0 2px var(--pitch)}
 </style>
 </head>
 <body>
@@ -167,7 +170,7 @@ function rpill(r){return r?'<span class="rt '+rcls(+r)+'" title="Match rating">'
       '<div class="stats">'+st.map(function(q){return '<div><strong>'+q[0]+'</strong><small>'+q[1]+'</small></div>'}).join("")+'</div>';
   } else mid='<p class="last">No minutes in the last 5 matches</p>';
   return '<article class="card'+(on?" on":"")+'"><div class="pc"><div class="photo" role="img" aria-label="Photo of '+x.n+'">'+initials(x.n)+img(x.photo)+'</div>'+(l?rpill(l.rt):'')+'</div>'+
-    '<div class="nm"><div class="name">'+x.n+(l?'<span class="cmp">'+badge(l.comp,0,l.compLogo)+l.comp+'</span>':'')+'</div><div class="sub">'+x.pos+' · plays for <strong>'+x.c+'</strong> ('+x.l+')</div>'+mid+
+    '<div class="nm"><div class="name">'+x.n+(l?'<span class="cmp">'+badge(l.comp,0,l.compLogo)+l.comp+'</span>':'')+'</div><div class="sub">x.pos+'</div>'+mid+
     '<div class="season">Season: '+x.ss.apps+' apps, '+x.ss.min+' min'+(x.gk?', '+x.ss.sv+' saves':', '+x.ss.g+' goals, '+x.ss.a+' assists')+'</div></div>'+
     '<div class="right"><div class="strip">'+bars+'</div><div class="cap">Last 5 matches, oldest to newest (this match outlined): competition, opponent, minutes, rating, date</div></div></article>';
 }
