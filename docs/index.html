@@ -60,7 +60,7 @@ h2 span{font-weight:400;font-size:15px;color:var(--mute)}
 .rt{display:inline-block;min-width:34px;text-align:center;font:700 14px/1 Archivo,sans-serif;padding:4px 6px;border-radius:5px;color:#fff;background:#46557a}
 .rt.hi{background:#1F8A4C}.rt.mid{background:#5d6b8a}.rt.lo{background:#B5541C}.rt.na{background:var(--off);color:var(--mute)}
 .b .rt{font-size:11px;padding:3px 2px;min-width:0;margin-bottom:2px}
-.sortbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px}
+  .sortbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px}
 .sl{font:700 18px/1 Archivo,sans-serif;font-stretch:85%;margin-right:4px}
 .sortbar button{font:600 16px/1 Archivo,sans-serif;padding:12px 18px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .sortbar button[aria-pressed="true"]{background:var(--pitch);border-color:var(--pitch);color:var(--bg)}
@@ -85,6 +85,11 @@ h2 span{font-weight:400;font-size:15px;color:var(--mute)}
 .bd{position:relative;overflow:hidden}
 .bd img,.photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;padding:2px}
 .photo{position:relative}.photo img{object-fit:cover;padding:0}
+.b.cur{outline:2px solid #D62839;outline-offset:2px;border-radius:6px}
+.bl{display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:4px}
+.bl .bd{width:18px;height:18px;font-size:7px}
+.strip{height:176px}
+.fx .me{font-weight:700;background:var(--off);border-radius:999px;padding:3px 10px 3px 3px;box-shadow:inset 0 0 0 2px var(--pitch)}
 </style>
 </head>
 <body>
@@ -96,9 +101,7 @@ h2 span{font-weight:400;font-size:15px;color:var(--mute)}
     <span class="sl">Sort by</span>
     <button type="button" data-s="date" aria-pressed="true">Latest match</button>
     <button type="button" data-s="rt" aria-pressed="false">Match rating</button>
-    <button type="button" data-s="min" aria-pressed="false">Minutes played</button>
     <button type="button" data-s="ga" aria-pressed="false">Goals + assists</button>
-    <button type="button" data-s="name" aria-pressed="false">Name</button>
   </div>
   <div class="controls"><span id="fdd" style="display:contents"></span><input id="q" type="search" placeholder="Search player, club, opponent" aria-label="Search"></div>
   <div id="out"></div>
@@ -109,11 +112,11 @@ var P=[
 ["Mathew Ryan","Levante","La Liga","GK"],["Jordan Bos","Feyenoord","Eredivisie","LB"],["Cameron Devlin","Rangers","Scottish Premiership","CDM"],
 ["Alessandro Circati","Benfica","Liga Portugal","CB"],["Cameron Burgess","Swansea City","Championship","CB"],["Riley McGree","Middlesbrough","Championship","LM"],
 ["Paul Izzo","Randers","Danish Superliga","GK"],["Cristian Volpato","Sassuolo","Serie A","RW"],["Harry Souttar","Leicester City","Championship","CB"],
-["Martin Boyle","Hibernian","Scottish Premiership","ST"],["Patrick Beach","Troyes","Ligue 1","GK"],["Jamie Maclaren","Mohun Bagan","Indian Super League","ST"],
+["Martin Boyle","Hibernian","Scottish Premiership","ST"],["Patrick Beach","Troyes","Ligue 1","GK"],
 ["Gianni Stensness","Viking","Eliteserien","CB"],["Kye Rowles","D.C. United","MLS","CB"],["Nestory Irankunda","Sporting CP","Liga Portugal","RM"],
 ["Aiden O’Neill","New York City FC","MLS","CDM"],["Mohamed Touré","Norwich City","Championship","ST"],["Kai Trewin","New York City FC","MLS","CB"],
 ["Callum Elder","Lincoln City","EFL","LB"],["Nick D’Agostino","Viking","Eliteserien","ST"],["Alex Robertson","Cardiff City","EFL","CDM"],
-["Connor Metcalfe","FC St. Pauli","Bundesliga","CM"],["Fran Karačić","Hajduk Split","Croatian HNL","RB"]];
+["Connor Metcalfe","FC St. Pauli","Bundesliga","CM"]];
 
 var OPP=["Northgate","Riverside","Harbour Town","Eastfield","Westbridge","Kingsmoor","Stonebrook","Ashdown","Marlow Rovers","Highcliffe"];
 function rng(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}
@@ -151,42 +154,45 @@ function img(u){return u?'<img src="'+u+'" alt="" onerror="this.remove()">':''}
 function badge(t,sq,logo){return '<span class="bd'+(sq?" sq":"")+'" style="--h:'+hue(t)+'" role="img" aria-label="'+t+' badge">'+code(t)+img(logo)+'</span>'}
 function rcls(r){return r>=7.5?"hi":r>=6.5?"mid":"lo"}
 function rpill(r){return r?'<span class="rt '+rcls(+r)+'" title="Match rating">'+r+'</span>':'<span class="rt na" title="Did not play">–</span>'}
-function card(x,on){
-  var l=x.last,bars=x.m.slice().reverse().map(function(g){
+  function card(x,on,l){
+  var bars=x.m.slice(0,5).reverse().map(function(g){
     var h=g.min?Math.max(8,Math.round(g.min/90*100)):6;
-    return '<div class="b" title="'+fmt(g.d)+': '+(g.min?g.min+" min, rated "+g.rt:"did not play")+'"><span class="v">'+(g.min||"–")+'</span><div class="t"><i class="'+(g.min?"":"z")+'" style="height:'+h+'%"></i></div>'+rpill(g.rt)+'<span>'+sd(g.d)+'</span></div>'}).join("");
+    return '<div class="b'+(g===l?' cur':'')+'" title="'+fmt(g.d)+': '+(g.min?g.min+" min, rated "+g.rt:"did not play")+'"><span class="bl">'+badge(g.comp||"?",0,g.compLogo)+badge(g.opp||"?",1,g.oppLogo)+'</span><span class="v">'+(g.min||"–")+'</span><div class="t"><i class="'+(g.min?"":"z")+'" style="height:'+h+'%"></i></div>'+rpill(g.rt)+'<span>'+sd(g.d)+'</span></div>'}).join("");
   var mid;
   if(l){
     var T=badge(x.c,1,l.teamLogo||x.clubLogo)+' '+x.c,O=badge(l.opp,1,l.oppLogo)+' '+l.opp,sc='<strong class="sc">'+(l.home?l.tf+'–'+l.ta:l.ta+'–'+l.tf)+'</strong>';
     var st=x.gk?[[l.sv,"Saves"],[l.cs,"Clean sheet"],[l.min,"Minutes"]]:[[l.g,"Goals"],[l.a,"Assists"],[l.min,"Minutes"]];
-    mid='<div class="fx">'+(l.home?'<span>'+T+'</span>'+sc+'<span>'+O+'</span>':'<span>'+O+'</span>'+sc+'<span>'+T+'</span>')+'</div>'+
-      '<p class="last">Last played <strong>'+ago(l.d)+'</strong> ('+fmt(l.d)+')'+(l.yc?', yellow card':'')+'</p>'+
+    mid='<div class="fx">'+(l.home?'<span class="me" title="'+x.n+' plays for '+x.c+'">'+T+'</span>'+sc+'<span>'+O+'</span>':'<span>'+O+'</span>'+sc+'<span class="me" title="'+x.n+' plays for '+x.c+'">'+T+'</span>')+'</div>'+
+      '<p class="last">Played <strong>'+ago(l.d)+'</strong> ('+fmt(l.d)+')'+(l.yc?', yellow card':'')+'</p>'+
       '<div class="stats">'+st.map(function(q){return '<div><strong>'+q[0]+'</strong><small>'+q[1]+'</small></div>'}).join("")+'</div>';
   } else mid='<p class="last">No minutes in the last 5 matches</p>';
   return '<article class="card'+(on?" on":"")+'"><div class="pc"><div class="photo" role="img" aria-label="Photo of '+x.n+'">'+initials(x.n)+img(x.photo)+'</div>'+(l?rpill(l.rt):'')+'</div>'+
-    '<div class="nm"><div class="name">'+x.n+(l?'<span class="cmp">'+badge(l.comp,0,l.compLogo)+l.comp+'</span>':'')+'</div><div class="sub">'+x.pos+', '+x.c+' ('+x.l+')</div>'+mid+
+    '<div class="nm"><div class="name">'+x.n+(l?'<span class="cmp">'+badge(l.comp,0,l.compLogo)+l.comp+'</span>':'')+'</div><div class="sub">'+x.pos+' · plays for <strong>'+x.c+'</strong> ('+x.l+')</div>'+mid+
     '<div class="season">Season: '+x.ss.apps+' apps, '+x.ss.min+' min'+(x.gk?', '+x.ss.sv+' saves':', '+x.ss.g+' goals, '+x.ss.a+' assists')+'</div></div>'+
-    '<div class="right"><div class="strip">'+bars+'</div><div class="cap">Last 5 matches, oldest to newest: minutes, match rating, date</div></div></article>';
+    '<div class="right"><div class="strip">'+bars+'</div><div class="cap">Last 5 matches, oldest to newest (this match outlined): competition, opponent, minutes, rating, date</div></div></article>';
 }
 
 var SORT="date";
 function render(){
-  var w=WIN,mr=RT,q=$("q").value.trim().toLowerCase(),lg=LG;
-  var rows=D.filter(function(x){var L=x.last;
-    return(!lg||x.l===lg)&&(!mr||(L&&L.rt&&+L.rt>=mr))&&(!L?w===99:L.d<=w)&&(!q||(x.n+" "+x.c+" "+(L?L.opp+" "+L.comp:"")).toLowerCase().indexOf(q)>-1)});
-  var val={rt:function(x){return x.last&&x.last.rt?+x.last.rt:0},min:function(x){return x.last?x.last.min:0},ga:function(x){return x.last?x.last.g+x.last.a:0}};
-  var K=SORT==="date"?"rt":SORT;rows.sort(function(a,b){return K==="name"?a.n.localeCompare(b.n):(val[K](b)-val[K](a))||a.n.localeCompare(b.n)});
-  var g={};rows.forEach(function(x){var k=x.last?x.last.d:"none";(g[k]=g[k]||[]).push(x)});
-  var keys=Object.keys(g).filter(function(k){return k!=="none"}).map(Number).sort(function(a,b){return a-b});
-  $("lede").innerHTML='<b>'+D.filter(function(x){return x.last&&x.last.d<=7}).length+' of '+D.length+'</b> tracked players have played in the last 7 days.';
-  function sec(h,sub,list,on){return '<h2>'+h+' <span>'+sub+'</span></h2><div class="grid">'+list.map(function(x){return card(x,on)}).join("")+'</div>'}
-  var html=SORT!=="date"?'<div class="grid">'+rows.map(function(x){return card(x,x.last?1:0)}).join("")+'</div>':keys.map(function(d){return sec(fmt(d),ago(d),g[d],1)}).join("");
-  if(g.none&&SORT==="date")html+=sec("No minutes","last 5 matches",g.none,0);
-  $("out").innerHTML=html||'<p class="empty">No players match. Clear the search or filters.</p>';
+  var w=WIN,mr=RT,q=$("q").value.trim().toLowerCase(),lg=LG,R=[];
+  D.forEach(function(x){x.m.forEach(function(g){if(g.min>0)R.push({x:x,g:g})})});
+  var rows=R.filter(function(r){var x=r.x,g=r.g;
+    return(!lg||x.l===lg)&&(!mr||(g.rt&&+g.rt>=mr))&&g.d<=w&&(!q||(x.n+" "+x.c+" "+g.opp+" "+g.comp).toLowerCase().indexOf(q)>-1)});
+  var val={rt:function(r){return r.g.rt?+r.g.rt:0},min:function(r){return r.g.min},ga:function(r){return r.g.g+r.g.a}};
+  rows.sort(function(a,b){
+    if(SORT==="name")return a.x.n.localeCompare(b.x.n)||a.g.d-b.g.d;
+    if(SORT==="date")return a.g.d-b.g.d||val.rt(b)-val.rt(a)||a.x.n.localeCompare(b.x.n);
+    return val[SORT](b)-val[SORT](a)||a.g.d-b.g.d||a.x.n.localeCompare(b.x.n)});
+  $("lede").innerHTML='<b>'+D.filter(function(x){return x.last&&x.last.d<=7}).length+' of '+D.length+'</b> tracked players have played in the last 7 days. Each row is one match.';
+  function list(a){return '<div class="grid">'+a.map(function(r){return card(r.x,1,r.g)}).join("")+'</div>'}
+  var html="";
+  if(SORT!=="date")html=list(rows);
+  else{var g={};rows.forEach(function(r){(g[r.g.d]=g[r.g.d]||[]).push(r)});
+    html=Object.keys(g).map(Number).sort(function(a,b){return a-b}).map(function(d){return '<h2>'+fmt(d)+' <span>'+ago(d)+'</span></h2>'+list(g[d])}).join("")}
+  $("out").innerHTML=html||'<p class="empty">No matches found. Clear the search or filters.</p>';
 }
 var WIN=99,RT=0,LG="";
 var F=[["Matches from",[[3,"Last 3 days"],[7,"Last 7 days"],[14,"Last 14 days"],[99,"All dates"]],99,function(v){WIN=+v}],
-["Match rating",[[0,"Any"],[6.5,"6.5+"],[7,"7.0+"],[7.5,"7.5+"],[8,"8.0+"]],0,function(v){RT=+v}],
 ["League",lgs.map(function(l,i){return[i?l:"",i?l:"All leagues"]}),"",function(v){LG=v}]];
 function closeAll(ex){document.querySelectorAll(".dd2").forEach(function(d){if(d!==ex){d.classList.remove("open");d.querySelector(".pill").setAttribute("aria-expanded","false")}})}
 F.forEach(function(f){
