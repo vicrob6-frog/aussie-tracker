@@ -75,4 +75,8 @@ def resolve(p, c):
 def team_from(prof):
     for k in ("current_team_id", "team_id", "club_id"):
         if prof.get(k): return prof[k]
-    for k in
+    for k in ("current_team", "team", "club"):
+        v = prof.get(k)
+        if isinstance(v, dict) and v.get("id"): return v["id"]
+        if isinstance(v, int): return v
+    return None
