@@ -7,20 +7,6 @@
  {"name": "Riley McGree", "club": "Middlesbrough", "league": "Championship", "pos": "LM"},
  {"name": "Paul Izzo", "club": "Randers", "league": "Danish Superliga", "pos": "GK"},
  {"name": "Cristian Volpato", "club": "Sassuolo", "league": "Serie A", "pos": "RW"},
- {"name": "Harry Souttar", "club": "Leicester City", "league": "Championship", "pos": "CB"},
- {"name": "Martin Boyle", "club": "Hibernian", "league": "Scottish Premiership", "pos": "ST"},
- {"name": "Patrick Beach", "club": "Troyes", "league": "Ligue 1", "pos": "GK"},
- {"name": "Gianni Stensness", "club": "Viking", "league": "Eliteserien", "pos": "CB"},
- {"name": "Kye Rowles", "club": "D.C. United", "league": "MLS", "pos": "CB"},
- {"name": "Nestory Irankunda", "club": "Sporting CP", "league": "Liga Portugal", "pos": "RM"},[
- {"name": "Mathew Ryan", "club": "Levante", "league": "La Liga", "pos": "GK"},
- {"name": "Jordan Bos", "club": "Feyenoord", "league": "Eredivisie", "pos": "LB"},
- {"name": "Cameron Devlin", "club": "Rangers", "league": "Scottish Premiership", "pos": "CDM"},
- {"name": "Alessandro Circati", "club": "Benfica", "league": "Liga Portugal", "pos": "CB"},
- {"name": "Cameron Burgess", "club": "Swansea City", "league": "Championship", "pos": "CB"},
- {"name": "Riley McGree", "club": "Middlesbrough", "league": "Championship", "pos": "LM"},
- {"name": "Paul Izzo", "club": "Randers", "league": "Danish Superliga", "pos": "GK"},
- {"name": "Cristian Volpato", "club": "Sassuolo", "league": "Serie A", "pos": "RW"},
  {"name": "Harry Souttar", "club": "Leicester City", "league": "League One", "pos": "CB"},
  {"name": "Martin Boyle", "club": "Hibernian", "league": "Scottish Premiership", "pos": "ST"},
  {"name": "Patrick Beach", "club": "Troyes", "league": "Ligue 1", "pos": "GK"},
@@ -80,12 +66,4 @@
  {"name": "Luka Jovanovic", "club": "San Jose Earthquakes", "league": "MLS", "pos": "ST"},
  {"name": "Ariath Piol", "club": "Real Salt Lake", "league": "MLS", "pos": "CM"},
  {"name": "Patrick Yazbek", "club": "Nashville SC", "league": "MLS", "pos": "LW"}
-]
- {"name": "Aiden O’Neill", "club": "New York City FC", "league": "MLS", "pos": "CDM"},
- {"name": "Mohamed Touré", "club": "Norwich City", "league": "Championship", "pos": "ST"},
- {"name": "Kai Trewin", "club": "New York City FC", "league": "MLS", "pos": "CB"},
- {"name": "Callum Elder", "club": "Lincoln City", "league": "EFL", "pos": "LB"},
- {"name": "Nick D’Agostino", "club": "Viking", "league": "Eliteserien", "pos": "ST"},
- {"name": "Alex Robertson", "club": "Cardiff City", "league": "EFL", "pos": "CDM"},
- {"name": "Connor Metcalfe", "club": "FC St. Pauli", "league": "Bundesliga", "pos": "CM"}
 ]
