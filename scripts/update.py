@@ -80,7 +80,7 @@ def team_from(prof):
         if isinstance(v, dict) and v.get("id"): return v["id"]
         if isinstance(v, int): return v
     return None
-
+    
 def main():
     if not KEY: sys.exit("Set the BSD_API_KEY environment variable.")
     roster, c = load(ROSTER, []), load(CACHE, {"ids": {}})
@@ -102,7 +102,7 @@ def main():
             if tid not in events_by_team:
                 ev = rows("/events/", team_id=tid, status="finished", date_from=(TODAY - timedelta(days=60)).isoformat())
                 peek("event", ev[:1])
-                events_by_team[tid] = sorted(ev, key=lambda e: e.get("event_date") or "", reverse=True)[:5]
+                events_by_team[tid] = sorted(ev, key=lambda e: e.get("event_date") or "", reverse=True)[:8]
             log = rows(f"/players/{pid}/stats/", team_id=tid, date_from=(start_cal if p["league"] in CALENDAR_YEAR else start_eu).isoformat())
             peek("stats row", log[:1])
             by_ev = {ident(pick(r, "event_id", "event", "match_id")): r for r in log}
