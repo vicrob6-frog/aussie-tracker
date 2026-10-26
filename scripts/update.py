@@ -40,18 +40,44 @@ def load(p, d): return json.load(open(p, encoding="utf-8")) if os.path.exists(p)
 def save(p, o): json.dump(o, open(p, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 def img(kind, i): return f"{BASE}/img/{kind}/{i}/" if i else None
 
+AU = ("AU", "AUS", "AUSTRALIA")
+shown = {"n": 0}
+def peek(label, obj):  # prints the first few raw responses so problems can be diagnosed from the log
+    if shown["n"] < 6: shown["n"] += 1; print(f"  [debug] {label}: {json.dumps(obj, ensure_ascii=False)[:700]}")
+
 def resolve(p, c):
-    if p.get("id"): return p["id"]
-    if p["name"] in c["ids"]: return c["ids"][p["name"]]
-    first, last = norm(p["name"].split()[0]), norm(p["name"].split()[-1])
-    res = get("/players/", name=last, limit=50)
-    res = res.get("results", []) if isinstance(res, dict) else res
-    hits = [r for r in res if last in norm(nm(r.get("name"))) and norm(nm(r.get("name")))[:1] == first[:1]
-            and (pick(r, "nationality_code", default="AU") in ("AU", "AUS"))]
-    if not hits: print(f"  ! could not find {p['name']}: add \"id\" to data/roster.json"); return None
-    if len(hits) > 1: print(f"  ! {p['name']} matched {len(hits)} players, using id {hits[0]['id']}: check it")
-    c["ids"][p["name"]] = hits[0]["id"]
-    return hits[0]["id"]
+    """Returns (player_id, team_id_or_None)."""
+    if p.get("id"): return p["id"], p.get("team_id")
+    first, last, club = norm(p["name"].split()[0]), norm(p["name"].split()[-1]), norm(p["club"])
+    seen = {}
+    for q in (p["name"], p["name"].split()[-1]):
+        res = get("/players/", name=q, limit=50)
+        for r in (res.get("results", []) if isinstance(res, dict) else res): seen[r["id"]] = r
+    scored = []
+    for r in seen.values():
+        n = norm(nm(r.get("name")))
+        if last not in n: continue
+        nat = str(nm(pick(r, "nationality_code", "nationality", "country_code", default=""))).upper()
+        tm = norm(nm(r.get("team")) or r.get("team_name") or "")
+        scored.append(((n[:1] == first[:1]) * 2 + (nat in AU) * 3 + bool(club and tm and (club in tm or tm in club)) * 4, r))
+    scored.sort(key=lambda x: -x[0])
+    if not scored: print(f"  ! could not find {p['name']}: add \"id\" to data/roster.json"); return None, None
+    best = scored[0][1]
+    if len(scored) > 1 or scored[0][0] < 5:
+        print(f"  ? {p['name']}: using id {best['id']}. Candidates: " + "; ".join(
+            f"{r['id']} {nm(r.get('name'))} ({pick(r, 'nationality_code', 'nationality', default='?')}, {nm(r.get('team')) or pick(r, 'team_id', default='?')})" for _, r in scored[:5]))
+    peek("search hit", best)
+    c["ids"][p["name"]] = best["id"]
+    return best["id"], pick(best, "team_id") or ident(best.get("team"))
+
+def team_from(prof):
+    for k in ("team_id", "current_team_id", "club_id"):
+        if prof.get(k): return prof[k]
+    for k in ("team", "current_team", "club"):
+        v = prof.get(k)
+        if isinstance(v, dict) and v.get("id"): return v["id"]
+        if isinstance(v, int): return v
+    return None
 
 def main():
     if not KEY: sys.exit("Set the BSD_API_KEY environment variable.")
@@ -61,15 +87,21 @@ def main():
     start_cal, start_eu = date(TODAY.year, 1, 1), date(TODAY.year if TODAY.month >= 7 else TODAY.year - 1, 7, 1)
     for p in roster:
         try:
-            pid = resolve(p, c)
+            pid, tid = resolve(p, c)
             if not pid: continue
-            prof = get(f"/players/{pid}/")
-            tid = p.get("team_id") or pick(prof, "team_id") or ident(prof.get("team"))
-            if not tid: print(f"  ! no current team for {p['name']}"); continue
+            tid = p.get("team_id") or tid
+            if not tid:
+                prof = get(f"/players/{pid}/"); peek("profile", prof); tid = team_from(prof)
+            if not tid:
+                lg0 = rows(f"/players/{pid}/stats/", date_from=(TODAY - timedelta(days=60)).isoformat())
+                peek("stats row", lg0[:1])
+                tid = next((pick(r, "team_id") or ident(r.get("team")) for r in lg0 if pick(r, "team_id") or r.get("team")), None)
+            if not tid: print(f"  ! no current team for {p['name']}: add \"team_id\" to its entry in data/roster.json"); continue
             if tid not in events_by_team:
                 ev = rows("/events/", team_id=tid, status="finished", date_from=(TODAY - timedelta(days=60)).isoformat())
                 events_by_team[tid] = sorted(ev, key=lambda e: e.get("event_date") or "", reverse=True)[:5]
             log = rows(f"/players/{pid}/stats/", team_id=tid, date_from=(start_cal if p["league"] in CALENDAR_YEAR else start_eu).isoformat())
+            peek("stats row", log[:1])
             by_ev = {ident(pick(r, "event_id", "event", "match_id")): r for r in log}
             ms, club = [], p["club"]
             for e in events_by_team[tid]:
