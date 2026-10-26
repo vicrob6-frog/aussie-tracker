@@ -1,0 +1,25 @@
+name: Update stats
+on:
+  schedule:
+    - cron: "30 21 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: update-stats
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/update.py
+        env:
+          BSD_API_KEY: ${{ secrets.BSD_API_KEY }}
+      - name: Save results
+        run: |
+          git config user.name "aussie-tracker-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data docs/players.json
+          git diff --cached --quiet || (git commit -m "Update stats" && git push)
