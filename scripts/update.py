@@ -80,3 +80,61 @@ def team_from(prof):
         if isinstance(v, dict) and v.get("id"): return v["id"]
         if isinstance(v, int): return v
     return None
+
+def main():
+    if not KEY: sys.exit("Set the BSD_API_KEY environment variable.")
+    roster, c = load(ROSTER, []), load(CACHE, {"ids": {}})
+    leagues = {x["id"]: x.get("name") for x in rows("/leagues/")}
+    events_by_team, players = {}, []
+    start_cal, start_eu = date(TODAY.year, 1, 1), date(TODAY.year if TODAY.month >= 7 else TODAY.year - 1, 7, 1)
+    for p in roster:
+        try:
+            pid, tid = resolve(p, c)
+            if not pid: continue
+            tid = p.get("team_id") or tid
+            if not tid:
+                prof = get(f"/players/{pid}/"); peek("profile", prof); tid = team_from(prof)
+            if not tid:
+                lg0 = rows(f"/players/{pid}/stats/", date_from=(TODAY - timedelta(days=60)).isoformat())
+                peek("stats row", lg0[:1])
+                tid = next((pick(r, "team_id") or ident(r.get("team")) for r in lg0 if pick(r, "team_id") or r.get("team")), None)
+            if not tid: print(f"  ! no current team for {p['name']}: add \"team_id\" to its entry in data/roster.json"); continue
+            if tid not in events_by_team:
+                ev = rows("/events/", team_id=tid, status="finished", date_from=(TODAY - timedelta(days=60)).isoformat())
+                peek("event", ev[:1])
+                events_by_team[tid] = sorted(ev, key=lambda e: e.get("event_date") or "", reverse=True)[:5]
+            log = rows(f"/players/{pid}/stats/", team_id=tid, date_from=(start_cal if p["league"] in CALENDAR_YEAR else start_eu).isoformat())
+            peek("stats row", log[:1])
+            by_ev = {ident(pick(r, "event_id", "event", "match_id")): r for r in log}
+            ms, club = [], p["club"]
+            for e in events_by_team[tid]:
+                hid, aid = pick(e, "home_team_id") or ident(e.get("home_team")), pick(e, "away_team_id") or ident(e.get("away_team"))
+                hn, an = nm(e.get("home_team")), nm(e.get("away_team"))
+                home = (hid == tid) if hid is not None else (norm(p["club"]) in norm(hn) or norm(hn) in norm(p["club"]))
+                oid, opp, mine = (aid, an, hn) if home else (hid, hn, an)
+                club = mine or club
+                r = by_ev.get(e["id"], {})
+                gf, ga = pick(e, "home_score", default=0), pick(e, "away_score", default=0)
+                tf, ta = (gf, ga) if home else (ga, gf)
+                mn = pick(r, "minutes_played", "minutes", default=0) or 0
+                rt = pick(r, "rating")
+                lg = e.get("league")
+                lid = pick(e, "league_id") or ident(lg)
+                ms.append({"date": (e.get("event_date") or "")[:10], "comp": nm(lg) or leagues.get(lid) or "", "compLogo": img("league", lid),
+                           "home": home, "team": mine, "teamLogo": img("team", tid), "opp": opp, "oppLogo": img("team", oid), "tf": tf, "ta": ta,
+                           "min": mn, "g": pick(r, "goals", default=0) or 0, "a": pick(r, "goal_assist", "goals_assist", "assists", default=0) or 0,
+                           "yc": pick(r, "yellow_cards", "yellow_card", "yellow", default=0) or 0, "rc": pick(r, "red_cards", "red_card", "red", default=0) or 0,
+                           "sv": pick(r, "saves", "goalkeeper_saves", "total_saves", default=0) or 0, "cs": int(p["pos"] == "GK" and mn > 0 and ta == 0),
+                           "rt": f"{float(rt):.1f}" if rt else None})
+            played = [r for r in log if (pick(r, "minutes_played", "minutes", default=0) or 0) > 0]
+            tot = lambda *k: sum(pick(r, *k, default=0) or 0 for r in played)
+            players.append({"name": p["name"], "pos": p["pos"], "club": club, "clubLogo": img("team", tid), "photo": img("player", pid),
+                            "season": {"apps": len(played), "min": tot("minutes_played", "minutes"), "g": tot("goals"), "a": tot("goal_assist", "goals_assist", "assists"), "sv": tot("saves", "goalkeeper_saves", "total_saves")},
+                            "matches": ms})
+        except RuntimeError as err:
+            print("  !", p["name"], err)
+    save(CACHE, c)
+    save(OUT, {"updated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "players": players})
+    print(f"Wrote {len(players)} of {len(roster)} players.")
+
+if __name__ == "__main__": main()
