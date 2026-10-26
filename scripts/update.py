@@ -47,8 +47,8 @@ def peek(label, obj):  # prints one raw sample of each response type so problems
 def squash(s): return norm(s).replace("'", "").replace(" ", "").replace("-", "")
 
 def resolve(p, c):
-    """Returns (player_id, team_id_or_None)."""
-    if p.get("id"): return p["id"], p.get("team_id")
+    """Returns (player_id, team_id_or_None, position_or_None)."""
+    if p.get("id"): return p["id"], p.get("team_id"), None
     first, last, club = norm(p["name"].split()[0]), squash(p["name"].split()[-1]), norm(p["club"])
     tail = p["name"].split()[-1].replace("’", "'")
     seen = {}
@@ -63,14 +63,14 @@ def resolve(p, c):
         tm = norm(nm(r.get("current_team")) or nm(r.get("team")) or r.get("team_name") or "")
         scored.append(((n[:1] == first[:1]) * 2 + (nat in AU) * 3 + bool(club and tm and (club in tm or tm in club)) * 4, r))
     scored.sort(key=lambda x: -x[0])
-    if not scored: print(f"  ! could not find {p['name']}: add \"id\" to data/roster.json"); return None, None
+    if not scored: print(f"  ! could not find {p['name']}: add \"id\" to data/roster.json"); return None, None, None
     best = scored[0][1]
     if scored[0][0] < 5 or (len(scored) > 1 and scored[1][0] == scored[0][0]):
         print(f"  ? {p['name']}: using id {best['id']}. Candidates: " + "; ".join(
             f"{r['id']} {nm(r.get('name'))} ({pick(r, 'nationality_code', 'nationality', default='?')}, {nm(r.get('current_team')) or '?'}, score {sc})" for sc, r in scored[:5]))
     peek("search hit", best)
     c["ids"][p["name"]] = best["id"]
-    return best["id"], pick(best, "current_team_id", "team_id") or ident(best.get("current_team")) or ident(best.get("team"))
+    return best["id"], pick(best, "current_team_id", "team_id") or ident(best.get("current_team")) or ident(best.get("team")), pick(best, "specific_position", "position")
 
 def team_from(prof):
     for k in ("current_team_id", "team_id", "club_id"):
@@ -89,9 +89,10 @@ def main():
     start_cal, start_eu = date(TODAY.year, 1, 1), date(TODAY.year if TODAY.month >= 7 else TODAY.year - 1, 7, 1)
     for p in roster:
         try:
-            pid, tid = resolve(p, c)
+            pid, tid, apos = resolve(p, c)
             if not pid: continue
             tid = p.get("team_id") or tid
+            pos = p.get("pos_fixed") or apos or p["pos"]
             if not tid:
                 prof = get(f"/players/{pid}/"); peek("profile", prof); tid = team_from(prof)
             if not tid:
@@ -124,11 +125,11 @@ def main():
                            "home": home, "team": mine, "teamLogo": img("team", tid), "opp": opp, "oppLogo": img("team", oid), "tf": tf, "ta": ta,
                            "min": mn, "g": pick(r, "goals", default=0) or 0, "a": pick(r, "goal_assist", "goals_assist", "assists", default=0) or 0,
                            "yc": pick(r, "yellow_cards", "yellow_card", "yellow", default=0) or 0, "rc": pick(r, "red_cards", "red_card", "red", default=0) or 0,
-                           "sv": pick(r, "saves", "goalkeeper_saves", "total_saves", default=0) or 0, "cs": int(p["pos"] == "GK" and mn > 0 and ta == 0),
+                           "sv": pick(r, "saves", "goalkeeper_saves", "total_saves", default=0) or 0, "cs": int(pos == "GK" and mn > 0 and ta == 0),
                            "rt": f"{float(rt):.1f}" if rt else None})
             played = [r for r in log if (pick(r, "minutes_played", "minutes", default=0) or 0) > 0]
             tot = lambda *k: sum(pick(r, *k, default=0) or 0 for r in played)
-            players.append({"name": p["name"], "pos": p["pos"], "club": club, "clubLogo": img("team", tid), "photo": img("player", pid),
+            players.append({"name": p["name"], "pos": pos, "club": club, "clubLogo": img("team", tid), "photo": img("player", pid),
                             "season": {"apps": len(played), "min": tot("minutes_played", "minutes"), "g": tot("goals"), "a": tot("goal_assist", "goals_assist", "assists"), "sv": tot("saves", "goalkeeper_saves", "total_saves")},
                             "matches": ms})
         except RuntimeError as err:
