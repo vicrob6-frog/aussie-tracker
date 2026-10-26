@@ -8,10 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#EDF0F7;--surface:#fff;--ink:#0B1B3A;--mute:#55637F;--line:#CDD5E4;--pitch:#0B1F4B;--gold:#D62839;--bar:#D62839;--off:#DCE2EE;--warn:#FDE8EA;--warnink:#7A1420;
+:root{--bg:#EDF0F7;--surface:#fff;--ink:#0B1B3A;--mute:#55637F;--line:#CDD5E4;--pitch:#0B1F4B;--gold:#D62839;--bar:#EC5F7C;--off:#DCE2EE;--warn:#FDE8EA;--warnink:#7A1420;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08122A;--surface:#101E3E;--ink:#E8EDF7;--mute:#97A6C4;--line:#243A66;--pitch:#E5384A;--gold:#FF5A6B;--bar:#FF5A6B;--off:#1F3159;--warn:#3a1219;--warnink:#ffc9cf}}
-:root[data-theme="dark"]{--bg:#08122A;--surface:#101E3E;--ink:#E8EDF7;--mute:#97A6C4;--line:#243A66;--pitch:#E5384A;--gold:#FF5A6B;--bar:#FF5A6B;--off:#1F3159;--warn:#3a1219;--warnink:#ffc9cf}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#08122A;--surface:#101E3E;--ink:#E8EDF7;--mute:#97A6C4;--line:#243A66;--pitch:#E5384A;--gold:#FF5A6B;--bar:#FF86A0;--off:#1F3159;--warn:#3a1219;--warnink:#ffc9cf}}
+:root[data-theme="dark"]{--bg:#08122A;--surface:#101E3E;--ink:#E8EDF7;--mute:#97A6C4;--line:#243A66;--pitch:#E5384A;--gold:#FF5A6B;--bar:#FF86A0;--off:#1F3159;--warn:#3a1219;--warnink:#ffc9cf}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 Archivo,system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -90,7 +90,7 @@ h2 span{font-weight:400;font-size:15px;color:var(--mute)}
 .bl .bd{width:26px;height:26px;font-size:9px}
 .strip{height:200px}
 .fx .me{font-weight:700;background:var(--off);border-radius:999px;padding:5px 12px 5px 8px;box-shadow:inset 0 0 0 2px var(--pitch)}
-    .card{background:#E1EEFC;border-color:#B9D2F0}
+.card{background:#E1EEFC;border-color:#B9D2F0}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card{background:var(--surface);border-color:var(--line)}}
 :root[data-theme="dark"] .card{background:var(--surface);border-color:var(--line)}
 </style>
@@ -170,7 +170,7 @@ function rpill(r){return r?'<span class="rt '+rcls(+r)+'" title="Match rating">'
       '<div class="stats">'+st.map(function(q){return '<div><strong>'+q[0]+'</strong><small>'+q[1]+'</small></div>'}).join("")+'</div>';
   } else mid='<p class="last">No minutes in the last 5 matches</p>';
   return '<article class="card'+(on?" on":"")+'"><div class="pc"><div class="photo" role="img" aria-label="Photo of '+x.n+'">'+initials(x.n)+img(x.photo)+'</div>'+(l?rpill(l.rt):'')+'</div>'+
-    '<div class="nm"><div class="name">'+x.n+(l?'<span class="cmp">'+badge(l.comp,0,l.compLogo)+l.comp+'</span>':'')+'</div><div class="sub">x.pos+'</div>'+mid+
+    '<div class="nm"><div class="name">'+x.n+(l?'<span class="cmp">'+badge(l.comp,0,l.compLogo)+l.comp+'</span>':'')+'</div><div class="sub">'+x.pos+'</div>'+mid+
     '<div class="season">Season: '+x.ss.apps+' apps, '+x.ss.min+' min'+(x.gk?', '+x.ss.sv+' saves':', '+x.ss.g+' goals, '+x.ss.a+' assists')+'</div></div>'+
     '<div class="right"><div class="strip">'+bars+'</div><div class="cap">Last 5 matches, oldest to newest (this match outlined): competition, opponent, minutes, rating, date</div></div></article>';
 }
